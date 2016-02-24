@@ -2,13 +2,13 @@ package com.example.model;
 
 
 import java.io.Serializable;
+import java.time.ZoneId;
 
 import org.springframework.data.cassandra.mapping.Column;
 
 public abstract class Event implements Serializable {
 
-  @Column(value = "event_type")
-  protected String eventType;
+  public static final ZoneId UTC = ZoneId.of("UTC");
 
   @Column(value = "client_ip")
   protected String clientIp;
@@ -52,14 +52,6 @@ public abstract class Event implements Serializable {
 
   public void setDetails(final String details) {
     this.details = details;
-  }
-
-  public String getEventType() {
-    return eventType;
-  }
-
-  public void setEventType(final String eventType) {
-    this.eventType = eventType;
   }
 
 }

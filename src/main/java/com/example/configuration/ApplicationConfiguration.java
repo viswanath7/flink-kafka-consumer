@@ -2,14 +2,15 @@ package com.example.configuration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cassandra.core.CqlOperations;
 import org.springframework.cassandra.core.CqlTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.data.cassandra.config.CassandraClusterFactoryBean;
 import org.springframework.data.cassandra.config.CassandraSessionFactoryBean;
 import org.springframework.data.cassandra.config.SchemaAction;
@@ -21,30 +22,44 @@ import org.springframework.data.cassandra.mapping.CassandraMappingContext;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 
 @Configuration
-@ComponentScan("com.example")
-@PropertySource(value = {"classpath:cassandra.properties"})
+@ComponentScan(basePackages = "com.example",
+    excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Configuration.class),
+        @ComponentScan.Filter(type = FilterType.REGEX, pattern = { "com.example.configuration.TestConfiguration" })
+    })@PropertySource(value = {"classpath:cassandra.properties"})
 @EnableCassandraRepositories("com.example.repository")
 public class ApplicationConfiguration extends AbstractCassandraConfiguration {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationConfiguration.class);
 
-  @Autowired
-  private Environment environment;
+  @Value("${cassandra.keyspace}")
+  private String keySpace;
 
+  @Value("${cassandra.contactpoints}")
+  private String contactPoints;
+
+  @Value("${cassandra.port}")
+  private String port;
+
+  @Bean
+  public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+    return new PropertySourcesPlaceholderConfigurer();
+  }
+  
   @Override
   protected String getKeyspaceName() {
-    final String keySpace = environment.getProperty("cassandra.keyspace");
-    LOGGER.info("Using keyspace: {}", keySpace);
+    LOGGER.info("Using key-space: {}", keySpace);
     return keySpace;
   }
 
   @Override
   @Bean
   public CassandraClusterFactoryBean cluster() {
+    final Integer portNumber = Integer.parseInt(port);
     final CassandraClusterFactoryBean cluster = new CassandraClusterFactoryBean();
-    cluster.setContactPoints(environment.getProperty("cassandra.contactpoints"));
-    cluster.setPort(Integer.parseInt(environment.getProperty("cassandra.port")));
-    LOGGER.info("Cluster created with contact points [" + environment.getProperty("cassandra.contactpoints") + "] " + "& port [" + Integer.parseInt(environment.getProperty("cassandra.port")) + "].");
+    cluster.setContactPoints(contactPoints);
+    cluster.setPort(portNumber);
+    LOGGER.info("Cluster created with contact points [" + contactPoints + "] " + "& portNumber [" + portNumber + "].");
     return cluster;
   }
 

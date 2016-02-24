@@ -2,7 +2,6 @@ package com.example.model.primarykey;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
 
@@ -11,6 +10,8 @@ import org.springframework.cassandra.core.Ordering;
 import org.springframework.cassandra.core.PrimaryKeyType;
 import org.springframework.data.cassandra.mapping.PrimaryKeyClass;
 import org.springframework.data.cassandra.mapping.PrimaryKeyColumn;
+
+import com.example.model.Event;
 
 @PrimaryKeyClass
 public class ReferenceDateTime implements Serializable {
@@ -23,6 +24,22 @@ public class ReferenceDateTime implements Serializable {
 
   @PrimaryKeyColumn(name = "event_date_time", ordinal = 2, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
   private Date eventDateTime;
+
+  public ReferenceDateTime() {}
+
+  public ReferenceDateTime(final String reference, final Integer year, final Date eventDateTime) {
+    this();
+    this.reference = reference;
+    this.year = year;
+    this.eventDateTime = eventDateTime;
+  }
+
+  public ReferenceDateTime(final String reference, final LocalDateTime eventDateTime) {
+    this();
+    this.reference = reference;
+    this.year = eventDateTime.getYear();
+    this.eventDateTime = Date.from(eventDateTime.atZone(Event.UTC).toInstant());
+  }
 
   public String getReference() {
     return reference;
@@ -46,22 +63,6 @@ public class ReferenceDateTime implements Serializable {
 
   public void setEventDateTime(final Date eventDateTime) {
     this.eventDateTime = eventDateTime;
-  }
-
-  public ReferenceDateTime() {}
-
-  public ReferenceDateTime(final String reference, final Integer year, final Date eventDateTime) {
-    this();
-    this.reference = reference;
-    this.year = year;
-    this.eventDateTime = eventDateTime;
-  }
-
-  public ReferenceDateTime(final String reference, final LocalDateTime eventDateTime) {
-    this();
-    this.reference = reference;
-    this.year = eventDateTime.getYear();
-    this.eventDateTime = Date.from(eventDateTime.atZone(ZoneId.of("UTC")).toInstant());
   }
 
   @Override

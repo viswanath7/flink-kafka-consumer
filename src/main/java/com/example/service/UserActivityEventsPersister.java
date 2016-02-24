@@ -13,8 +13,10 @@ import com.example.domain.UserActivityEvent;
 import com.example.mapper.JSONDeserialiser;
 import com.example.model.EventByCorrelationId;
 import com.example.model.EventByReference;
+import com.example.model.EventByType;
 import com.example.repository.EventsByCorrelationIdRepository;
 import com.example.repository.EventsByReferenceRepository;
+import com.example.repository.EventsByTypeRepository;
 
 @Service
 public class UserActivityEventsPersister {
@@ -33,37 +35,8 @@ public class UserActivityEventsPersister {
   @Autowired
   private EventsByReferenceRepository eventsByReferenceRepository;
 
-  public JSONDeserialiser getJsonDeserialiser() {
-    return jsonDeserialiser;
-  }
-
-  public void setJsonDeserialiser(final JSONDeserialiser jsonDeserialiser) {
-    this.jsonDeserialiser = jsonDeserialiser;
-  }
-
-  public MessagingToDomainObjectConverter getMessagingToDomainObjectConverter() {
-    return messagingToDomainObjectConverter;
-  }
-
-  public void setMessagingToDomainObjectConverter(final MessagingToDomainObjectConverter messagingToDomainObjectConverter) {
-    this.messagingToDomainObjectConverter = messagingToDomainObjectConverter;
-  }
-
-  public EventsByCorrelationIdRepository getEventsByCorrelationIdRepository() {
-    return eventsByCorrelationIdRepository;
-  }
-
-  public void setEventsByCorrelationIdRepository(final EventsByCorrelationIdRepository eventsByCorrelationIdRepository) {
-    this.eventsByCorrelationIdRepository = eventsByCorrelationIdRepository;
-  }
-
-  public EventsByReferenceRepository getEventsByReferenceRepository() {
-    return eventsByReferenceRepository;
-  }
-
-  public void setEventsByReferenceRepository(final EventsByReferenceRepository eventsByReferenceRepository) {
-    this.eventsByReferenceRepository = eventsByReferenceRepository;
-  }
+  @Autowired
+  private EventsByTypeRepository eventsByTypeRepository;
 
   public void persist(final String json) {
     LOG.debug("Saving event: {}", json);
@@ -72,7 +45,8 @@ public class UserActivityEventsPersister {
       final UserActivityEvent userActivityEvent = jsonDeserialiser.convert(json, UserActivityEvent.class);
       saveEventByCorrelationId(userActivityEvent);
       saveEventsByReference(userActivityEvent);
-      LOG.debug("Successfully saved event: {} ", json);
+      saveEventsByType(userActivityEvent);
+      LOG.info("Successfully saved event: {} ", json);
     } catch (final IOException ex) {
       LOG.error("Error encountered while trying to save the event: {}", json, ex);
     }
@@ -88,6 +62,12 @@ public class UserActivityEventsPersister {
   public void saveEventsByReference(final UserActivityEvent userActivityEvent) {
     final EventByReference eventByReference = messagingToDomainObjectConverter.toEventByReference(userActivityEvent);
     eventsByReferenceRepository.save(eventByReference);
+  }
+
+  //TODO: Make it asynchronous
+  public void saveEventsByType(final UserActivityEvent userActivityEvent) {
+    final EventByType eventByType = messagingToDomainObjectConverter.toEventByType(userActivityEvent);
+    eventsByTypeRepository.save(eventByType);
   }
 
 }

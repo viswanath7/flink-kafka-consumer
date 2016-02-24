@@ -2,7 +2,6 @@ package com.example.model.primarykey;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
 
@@ -10,6 +9,8 @@ import org.springframework.cassandra.core.Ordering;
 import org.springframework.cassandra.core.PrimaryKeyType;
 import org.springframework.data.cassandra.mapping.PrimaryKeyClass;
 import org.springframework.data.cassandra.mapping.PrimaryKeyColumn;
+
+import com.example.model.Event;
 
 @PrimaryKeyClass
 public class CorrelationIdDateTime implements Serializable {
@@ -19,6 +20,20 @@ public class CorrelationIdDateTime implements Serializable {
 
   @PrimaryKeyColumn(name = "event_date_time", ordinal = 1, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
   private Date eventDateTime;
+
+  public CorrelationIdDateTime() {}
+
+  public CorrelationIdDateTime(final String correlationId, final Date eventDateTime) {
+    this();
+    this.correlationId = correlationId;
+    this.eventDateTime = eventDateTime;
+  }
+
+  public CorrelationIdDateTime(final String correlationId, final LocalDateTime eventDateTime) {
+    this();
+    this.correlationId = correlationId;
+    this.eventDateTime = Date.from(eventDateTime.atZone(Event.UTC).toInstant());
+  }
 
   public String getCorrelationId() {
     return correlationId;
@@ -34,20 +49,6 @@ public class CorrelationIdDateTime implements Serializable {
 
   public void setEventDateTime(final Date eventDateTime) {
     this.eventDateTime = eventDateTime;
-  }
-
-  public CorrelationIdDateTime() {}
-
-  public CorrelationIdDateTime(final String correlationId, final Date eventDateTime) {
-    this();
-    this.correlationId = correlationId;
-    this.eventDateTime = eventDateTime;
-  }
-
-  public CorrelationIdDateTime(final String correlationId, final LocalDateTime eventDateTime) {
-    this();
-    this.correlationId = correlationId;
-    this.eventDateTime = Date.from(eventDateTime.atZone(ZoneId.of("UTC")).toInstant());
   }
 
   @Override

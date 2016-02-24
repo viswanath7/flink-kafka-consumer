@@ -1,29 +1,39 @@
 package com.example.model;
 
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.data.cassandra.mapping.Column;
 import org.springframework.data.cassandra.mapping.PrimaryKey;
 import org.springframework.data.cassandra.mapping.Table;
 
-import com.example.model.primarykey.ReferenceDateTime;
+import com.example.model.primarykey.EventTypeDateTime;
 
-@Table(value = "events_by_reference_and_year")
-public class EventByReference extends Event {
+@Table(value = "events_by_type")
+public class EventByType extends Event {
 
-  @Column(value = "event_type")
-  protected String eventType;
   @PrimaryKey
-  private ReferenceDateTime primaryKey;
+  private EventTypeDateTime primaryKey;
+
+  @Column(value = "reference")
+  private String reference;
+
   @Column(value = "correlation_id")
   private String correlationId;
 
-  public ReferenceDateTime getPrimaryKey() {
+
+  public EventTypeDateTime getPrimaryKey() {
     return primaryKey;
   }
 
-  public void setPrimaryKey(final ReferenceDateTime primaryKey) {
+  public void setPrimaryKey(final EventTypeDateTime primaryKey) {
     this.primaryKey = primaryKey;
+  }
+
+  public String getReference() {
+    return reference;
+  }
+
+  public void setReference(final String reference) {
+    this.reference = reference;
   }
 
   public String getCorrelationId() {
@@ -34,26 +44,17 @@ public class EventByReference extends Event {
     this.correlationId = correlationId;
   }
 
-  public String getEventType() {
-    return eventType;
-  }
-
-  public void setEventType(final String eventType) {
-    this.eventType = eventType;
-  }
-
   @Override
   public String toString() {
     return new ToStringBuilder(this)
-        .append("eventType", getEventType())
+        .append("eventType", getPrimaryKey().getEventType())
         .append("eventDateTime", getPrimaryKey().getEventDateTime())
         .append("correlationId", getCorrelationId())
         .append("clientIp", getClientIp())
         .append("userAgent", getUserAgent())
         .append("userAgentFiltered", getUserAgentFiltered())
         .append("details", getDetails())
-        .append("reference", getPrimaryKey().getReference())
+        .append("reference", getReference())
         .toString();
   }
-
 }
