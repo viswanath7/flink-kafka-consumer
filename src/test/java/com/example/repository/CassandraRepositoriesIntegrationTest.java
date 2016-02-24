@@ -19,7 +19,6 @@ import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.thrift.transport.TTransportException;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,7 +48,7 @@ import com.example.model.EventByType;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = TestConfiguration.class)
-public class CassandraIntegrationTest {
+public class CassandraRepositoriesIntegrationTest {
   public static final String KAFKA_EVENT = "src/test/resources/kafka_event.json";
   public static final String KEYSPACE_CREATION_QUERY = "CREATE KEYSPACE IF NOT EXISTS test_keyspace " + "WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };";
   public static final String KEYSPACE_ACTIVATE_QUERY = "USE test_keyspace;";
@@ -59,10 +58,8 @@ public class CassandraIntegrationTest {
   public static final String EVENT_REFERENCE = "qtvszw9qbjnswfprsxnfelk2yvdvqt09";
   public static final String EVENT_CORRELATION_ID = "2c08b8f1-afbb-455a-a1bd-31f15115d424";
   public static final String EVENT_TYPE = "LOGIN_INTERCEPTOR_CREATE_SESSION";
-  private static final Logger LOG = LoggerFactory.getLogger(CassandraIntegrationTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CassandraRepositoriesIntegrationTest.class);
 
-  /*@Autowired
-  private Cluster cluster;*/
   @Autowired
   private CassandraAdminOperations adminTemplate;
 
@@ -86,7 +83,6 @@ public class CassandraIntegrationTest {
 
   private String json;
 
-
   @BeforeClass
   public static void startCassandraEmbedded() throws InterruptedException, TTransportException, ConfigurationException, IOException {
     LOG.debug("Staring embedded cassandra database for integration test ...");
@@ -107,7 +103,7 @@ public class CassandraIntegrationTest {
   }
 
   @Before
-  public void createTable() throws InterruptedException, TTransportException, ConfigurationException, IOException {
+  public void readContent() throws InterruptedException, TTransportException, ConfigurationException, IOException {
     LOG.debug("Reading content for column family: {} from the data file: {} ...", EVENTS_BY_CORRELATION_ID_COLUMN_FAMILY, KAFKA_EVENT);
     json = new String (Files.readAllBytes(Paths.get(KAFKA_EVENT)), StandardCharsets.UTF_8);
   }
@@ -201,8 +197,4 @@ public class CassandraIntegrationTest {
     return (localDateTime == null)? null : Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
   }
 
-  @After
-  public void dropTable() {
-    json = null;
-  }
 }
