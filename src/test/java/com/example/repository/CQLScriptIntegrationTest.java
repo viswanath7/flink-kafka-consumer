@@ -4,21 +4,26 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import org.cassandraunit.spring.CassandraDataSet;
+import org.cassandraunit.spring.CassandraUnitDependencyInjectionTestExecutionListener;
 import org.cassandraunit.spring.CassandraUnitTestExecutionListener;
 import org.cassandraunit.spring.EmbeddedCassandra;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.example.configuration.TestConfiguration;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@TestExecutionListeners({CassandraUnitTestExecutionListener.class })
+@ContextConfiguration(classes = TestConfiguration.class)
+@TestExecutionListeners({CassandraUnitDependencyInjectionTestExecutionListener.class, CassandraUnitTestExecutionListener.class, DependencyInjectionTestExecutionListener.class })
 @EmbeddedCassandra(timeout = 10000)
 @CassandraDataSet(value = { "users_activity_db.cql" }, keyspace = "cassandra_unit_keyspace")
 public class CQLScriptIntegrationTest {

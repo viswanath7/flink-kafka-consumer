@@ -18,10 +18,11 @@ import java.util.stream.StreamSupport;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.thrift.transport.TTransportException;
-import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
-import org.junit.AfterClass;
+import org.cassandraunit.spring.CassandraDataSet;
+import org.cassandraunit.spring.CassandraUnitDependencyInjectionTestExecutionListener;
+import org.cassandraunit.spring.CassandraUnitTestExecutionListener;
+import org.cassandraunit.spring.EmbeddedCassandra;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -31,10 +32,10 @@ import org.springframework.cassandra.core.cql.CqlIdentifier;
 import org.springframework.data.cassandra.core.CassandraAdminOperations;
 import org.springframework.data.cassandra.core.CassandraOperations;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.example.configuration.TestConfiguration;
@@ -45,13 +46,13 @@ import com.example.model.EventByCorrelationId;
 import com.example.model.EventByReference;
 import com.example.model.EventByType;
 
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = TestConfiguration.class)
+@TestExecutionListeners({CassandraUnitDependencyInjectionTestExecutionListener.class, CassandraUnitTestExecutionListener.class, DependencyInjectionTestExecutionListener.class })
+@EmbeddedCassandra(timeout = 10000)
+@CassandraDataSet(value = { "users_activity_db.cql" }, keyspace = "cassandra_unit_keyspace")
 public class CassandraRepositoriesIntegrationTest {
   public static final String KAFKA_EVENT = "src/test/resources/kafka_event.json";
-  public static final String KEYSPACE_CREATION_QUERY = "CREATE KEYSPACE IF NOT EXISTS test_keyspace " + "WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };";
-  public static final String KEYSPACE_ACTIVATE_QUERY = "USE test_keyspace;";
   public static final String EVENTS_BY_CORRELATION_ID_COLUMN_FAMILY = "events_by_correlation_id";
   public static final String EVENTS_BY_TYPE_COLUMN_FAMILY = "events_by_type";
   public static final String EVENTS_BY_REFERENCE_AND_YEAR_COLUMN_FAMILY = "events_by_reference_and_year";
@@ -83,25 +84,6 @@ public class CassandraRepositoriesIntegrationTest {
 
   private String json;
 
-  @BeforeClass
-  public static void startCassandraEmbedded() throws InterruptedException, TTransportException, ConfigurationException, IOException {
-    LOG.debug("Staring embedded cassandra database for integration test ...");
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra();
-    final Cluster cluster = Cluster.builder().addContactPoints("127.0.0.1").withPort(9142).build();
-    LOG.info("Server Started at 127.0.0.1:9142... ");
-    final Session session = cluster.connect();
-    session.execute(KEYSPACE_CREATION_QUERY);
-    session.execute(KEYSPACE_ACTIVATE_QUERY);
-    LOG.info("KeySpace created and activated.");
-    Thread.sleep(5000);
-  }
-
-  @AfterClass
-  public static void stopCassandraEmbedded() {
-    LOG.debug("Stopping embedded cassandra database used for integration tests ...");
-    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
-  }
-
   @Before
   public void readContent() throws InterruptedException, TTransportException, ConfigurationException, IOException {
     LOG.debug("Reading content for column family: {} from the data file: {} ...", EVENTS_BY_CORRELATION_ID_COLUMN_FAMILY, KAFKA_EVENT);
@@ -114,7 +96,7 @@ public class CassandraRepositoriesIntegrationTest {
     LOG.debug("Testing save operation for 'EventByCorrelationId' followed by a retrieve");
 
     LOG.debug("Creating column-family: {} ...", EVENTS_BY_CORRELATION_ID_COLUMN_FAMILY);
-    adminTemplate.createTable(true, CqlIdentifier.cqlId(EVENTS_BY_CORRELATION_ID_COLUMN_FAMILY), EventByCorrelationId.class, new HashMap<String, Object>());
+    adminTemplate.createTable(true, CqlIdentifier.cqlId(EVENTS_BY_CORRELATION_ID_COLUMN_FAMILY), EventByCorrelationId.class, new HashMap<>());
 
     final EventByCorrelationId eventByCorrelationId = messagingToDomainObjectConverter.toEventByCorrelationId(getUserActivityEvent(json));
     assertThat( eventByCorrelationId, notNullValue());
@@ -142,7 +124,7 @@ public class CassandraRepositoriesIntegrationTest {
     LOG.debug("Testing save operation for 'EventByReference' followed by a retrieve");
 
     LOG.debug("Creating column-family: {} ...", EVENTS_BY_REFERENCE_AND_YEAR_COLUMN_FAMILY);
-    adminTemplate.createTable(true, CqlIdentifier.cqlId(EVENTS_BY_REFERENCE_AND_YEAR_COLUMN_FAMILY), EventByReference.class, new HashMap<String, Object>());
+    adminTemplate.createTable(true, CqlIdentifier.cqlId(EVENTS_BY_REFERENCE_AND_YEAR_COLUMN_FAMILY), EventByReference.class, new HashMap<>());
 
     final EventByReference eventByReference = messagingToDomainObjectConverter.toEventByReference(getUserActivityEvent(json));
     assertThat( eventByReference, notNullValue());
@@ -165,7 +147,7 @@ public class CassandraRepositoriesIntegrationTest {
     LOG.debug("Testing save operation for 'EventByType' followed by a retrieve");
 
     LOG.debug("Creating column-family: {} ...", EVENTS_BY_TYPE_COLUMN_FAMILY);
-    adminTemplate.createTable(true, CqlIdentifier.cqlId(EVENTS_BY_TYPE_COLUMN_FAMILY), EventByType.class, new HashMap<String, Object>());
+    adminTemplate.createTable(true, CqlIdentifier.cqlId(EVENTS_BY_TYPE_COLUMN_FAMILY), EventByType.class, new HashMap<>());
 
     final EventByType eventByType = messagingToDomainObjectConverter.toEventByType(getUserActivityEvent(json));
     assertThat( eventByType, notNullValue());

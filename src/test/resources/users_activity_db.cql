@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS events_by_correlation_id
 (
-client_ip inet,
+client_ip text,
 correlation_id text,
 reference text,
 event_type text,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS events_by_reference_and_year
 (
 reference text,
 year int,
-client_ip inet,
+client_ip text,
 correlation_id text,
 event_type text,
 details text,
@@ -37,7 +37,7 @@ ALTER TABLE events_by_reference_and_year WITH COMPACTION = {'class':'DateTieredC
 
 CREATE TABLE IF NOT EXISTS events_by_type
 (
-client_ip inet,
+client_ip text,
 correlation_id text,
 reference text,
 event_type text,
